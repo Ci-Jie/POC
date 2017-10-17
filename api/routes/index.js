@@ -3,9 +3,16 @@ var Web3 = require("web3");
 var router = express.Router();
 
 var abi = [{"constant":false,"inputs":[{"name":"index","type":"uint256"},{"name":"voterName","type":"string"}],"name":"addCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getCandidateCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidates","outputs":[{"name":"name","type":"string"},{"name":"voteCount","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"index","type":"uint256"}],"name":"getCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"voters","outputs":[{"name":"voted","type":"bool"},{"name":"candidate","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"candidateName","type":"string"}],"name":"vote","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Vote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"index","type":"uint256"}],"name":"AddCandidate","type":"event"}];
-var address = "0x3900a09cd795b47df3e7e209b8e68e7762691f4f";
+var address = <ADDRESS>;
 var node = new Web3();
-var nodeIPs = ['http://60.249.15.85:8545', 'http://60.249.15.85:8546', 'http://60.249.15.85:8547'];
+var nodeIPs = <NODE_IPS>
+
+router.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Methods", "*");
+  next();
+});
 
 /***
  取得錢包所在的節點
@@ -25,6 +32,7 @@ function getNodeIP(account) {
  查詢所有錢包
  */
 router.get('/voters', function (req, res) {
+  var web3 = node.eth.contract(abi).at(address);
   var voters = [];
   try {
     for (var nodeIndex = 0; nodeIndex < nodeIPs.length; nodeIndex++) {
@@ -33,7 +41,8 @@ router.get('/voters', function (req, res) {
         voters.push({
           'node': 'node' + (nodeIndex + 1),
           'account': node.eth.accounts[index],
-          'balance': node.eth.getBalance(node.eth.accounts[index]).toNumber()
+          'balance': node.eth.getBalance(node.eth.accounts[index]).toNumber(),
+          'voted': web3.getVoter.call({from: node.eth.accounts[index]})[0]
         })
       }
     }
@@ -94,7 +103,15 @@ router.post('/candidate/add', function (req, res) {
   node.setProvider(new Web3.providers.HttpProvider(nodeIP));
   var web3 = node.eth.contract(abi).at(address);
   var candidateCount = web3.getCandidateCount.call().toNumber();
-  node.personal.unlockAccount(account, password, 0);
+  try {
+    node.personal.unlockAccount(account, password, 0);
+  } catch (e) {
+    res.status(401).send(JSON.stringify({
+      'status': 'Error',
+      'result': 'This account unlock failed.'
+    }));
+    return;
+  }
   for (var index = 0; index < candidateCount; index++) {
     if(web3.getCandidate.call(index)[0] == candidateName) {
       res.status(409).send(JSON.stringify({
@@ -104,9 +121,9 @@ router.post('/candidate/add', function (req, res) {
       return;
     }
   }
-  var txHash = web3.addCandidate.sendTransaction(candidateCount, candidateName, {from: account});
-  var addCandidateEvent = web3.AddCandidate();
   try {
+    var txHash = web3.addCandidate.sendTransaction(candidateCount, candidateName, {from: account});
+    var addCandidateEvent = web3.AddCandidate();
     addCandidateEvent.watch(function(err, result) {
       if (!err && result.transactionHash == txHash) {
         res.status(200).send(JSON.stringify({
@@ -122,7 +139,7 @@ router.post('/candidate/add', function (req, res) {
   } catch (e) {
     res.status(404).send(JSON.stringify({
       'status': 'Error',
-      'result': ''
+      'result': 'This account insufficient funds.'
     }));
   }
 })
@@ -164,7 +181,15 @@ router.post('/vote', function (req, res) {
   var nodeIP = getNodeIP(account);
   node.setProvider(new Web3.providers.HttpProvider(nodeIP));
   var web3 = node.eth.contract(abi).at(address);
-  node.personal.unlockAccount(account, password, 0);
+  try {
+    node.personal.unlockAccount(account, password, 0);
+  } catch (e) {
+    res.status(401).send(JSON.stringify({
+      'status': 'Error',
+      'result': 'This account unlock failed.'
+    }));
+    return;
+  }
   for(var index = 0; index < web3.getCandidateCount.call().toNumber(); index++) {
     if (candidateName == web3.getCandidate.call(index)[0]) break;
     if (index == web3.getCandidateCount.call().toNumber() - 1) {

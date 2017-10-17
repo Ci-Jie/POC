@@ -1,3 +1,5 @@
 .DS_Store
 node_modules/
 contracts/.node-xmlhttprequest-sync*
+api/.node-xmlhttprequest-sync*
+api/npm-debug.log
