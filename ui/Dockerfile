@@ -13,7 +13,8 @@ RUN apk update && \
 WORKDIR POC/ui
 
 RUN npm install && \
-    chmod +x entrypoint.js
+    chmod +x entrypoint.js && \
+    chmod +x entrypoint.sh
 
 EXPOSE 80
 
