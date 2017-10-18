@@ -11,4 +11,6 @@ WORKDIR /POC/api
 RUN npm install && \
     chmod +x entrypoint.js
 
-ENTRYPOINT ["node entrypoint.js"]
+EXPOSE 3000
+
+ENTRYPOINT ["cd /POC/api && node entrypoint.js"]
