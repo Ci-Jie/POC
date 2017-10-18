@@ -17,4 +17,4 @@ RUN npm install && \
 
 EXPOSE 80
 
-ENTRYPOINT ["node", "entrypoint.js", "&&", "httpd-foreground"]
+ENTRYPOINT ["node", "entrypoint.js"]
