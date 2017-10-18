@@ -7,4 +7,3 @@ shell.exec('npm run build');
 shell.cd('dist/');
 shell.cp('-R', 'index.html', '/usr/local/apache2/htdocs/');
 shell.cp('-R', 'static', '/usr/local/apache2/htdocs/');
-shell.exec('httpd-foreground');
