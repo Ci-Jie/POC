@@ -1,7 +1,14 @@
 FROM node:8.7-alpine
 
-MAINTAINER Ci Jie Li <cjlee8110@gmail.com>
+MAINTAINER Ci-Jie Li <cjlee8110@gmail.com>
 
-RUN apk add --no-cache git python \
-    git clone https://github.com/Ci-Jie/POC.git \
-    npm install 
+RUN apk update && \
+	apk add --no-cache git python make g++ && \
+    git clone https://github.com/Ci-Jie/POC.git
+
+WORKDIR /POC/api
+
+RUN npm install && \
+    chmod +x entrypoint.js
+
+ENTRYPOINT ["node entrypoint.js"]
