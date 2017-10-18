@@ -13,4 +13,4 @@ RUN npm install && \
 
 EXPOSE 3000
 
-ENTRYPOINT ["cd /POC/api && node entrypoint.js"]
+ENTRYPOINT ["node", "entrypoint.js"]
