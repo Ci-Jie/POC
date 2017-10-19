@@ -2,10 +2,10 @@ var express = require('express');
 var Web3 = require("web3");
 var router = express.Router();
 
-var abi = [{"constant":false,"inputs":[{"name":"index","type":"uint256"},{"name":"voterName","type":"string"}],"name":"addCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getCandidateCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidates","outputs":[{"name":"name","type":"string"},{"name":"voteCount","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"index","type":"uint256"}],"name":"getCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"voters","outputs":[{"name":"voted","type":"bool"},{"name":"candidate","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"candidateName","type":"string"}],"name":"vote","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Vote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"index","type":"uint256"}],"name":"AddCandidate","type":"event"}];
-var address = <ADDRESS>;
+var abi = [{"constant":false,"inputs":[{"name":"index","type":"uint256"},{"name":"voterName","type":"string"}],"name":"addCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"candidateID","type":"uint256"},{"name":"candidateName","type":"string"}],"name":"vote","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getCandidateCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidates","outputs":[{"name":"name","type":"string"},{"name":"voteCount","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"index","type":"uint256"}],"name":"getCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"voters","outputs":[{"name":"voted","type":"bool"},{"name":"candidate","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Vote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"index","type":"uint256"}],"name":"AddCandidate","type":"event"}]
+var address = "0x257ddbb5d0fd75bf11437c0a5ea4d7cc6012a647";
 var node = new Web3();
-var nodeIPs = <NODE_IPS>;
+var nodeIPs = ["http://60.249.15.85:8545","http://60.249.15.85:8546","http://60.249.15.85:8547"];
 
 router.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -17,12 +17,26 @@ router.all('*', function(req, res, next) {
 /***
  取得錢包所在的節點
  */
-function getNodeIP(account) {
+function getNodeIP (account) {
   var get = false;
   for (var index = 0; index < nodeIPs.length; index++) {
     node.setProvider(new Web3.providers.HttpProvider(nodeIPs[index]));
     if (node.eth.accounts.indexOf(account) > -1) {
       return nodeIPs[index];
+    }
+  }
+  return null;
+}
+
+/***
+ 取得候選人代號
+ */
+function getCandidateID (candidateName) {
+  var web3 = node.eth.contract(abi).at(address);
+  for (var index = 0; index < web3.getCandidateCount.call().toNumber(); index++) {
+    var candidate = web3.getCandidate.call(index);
+    if (candidate[0] == candidateName) {
+      return index;
     }
   }
   return null;
@@ -190,19 +204,16 @@ router.post('/vote', function (req, res) {
     }));
     return;
   }
-  for(var index = 0; index < web3.getCandidateCount.call().toNumber(); index++) {
-    if (candidateName == web3.getCandidate.call(index)[0]) break;
-    if (index == web3.getCandidateCount.call().toNumber() - 1) {
-      res.status(404).send(JSON.stringify({
-        'status': 'Error',
-        'result': 'This candidate is not exist.'
-      }))
-      return;
-    }
+  if (getCandidateID(candidateName) == null) {
+    res.status(404).send(JSON.stringify({
+      'status': 'Error',
+      'result': 'This candidate is not exist.'
+    }))
+    return;
   }
   try {
     if (web3.getVoter.call({from: account})[0] == false) {
-      var txHash = web3.vote.sendTransaction(candidateName, {from: account});
+      var txHash = web3.vote.sendTransaction(getCandidateID(candidateName), candidateName, {from: account});
       var addVoteEvent = web3.Vote();
       addVoteEvent.watch(function(err, result) {
         if (!err && result.transactionHash == txHash) {

@@ -24,19 +24,15 @@ contract Test {
     candidateCount = 0;
   }
 
-  function vote (string candidateName) returns (bool, string) {
+  function vote (uint candidateID, string candidateName) returns (bool, string) {
     voters[msg.sender].voted = true;
     voters[msg.sender].candidate = candidateName;
     Vote(msg.sender);
-    for (var index = 0; index < candidateCount; index++) {
-      if (sha3(candidates[index].name) == sha3(candidateName)) {
-        candidates[index].voteCount += 1;
-        return (
-          voters[msg.sender].voted,
-          voters[msg.sender].candidate
-        );
-      }
-    }
+    candidates[candidateID].voteCount += 1;
+    return (
+      voters[msg.sender].voted,
+      voters[msg.sender].candidate
+    );
   }
 
   function getVoter () returns (bool, string) {
