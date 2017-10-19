@@ -3,9 +3,9 @@ var Web3 = require("web3");
 var router = express.Router();
 
 var abi = [{"constant":false,"inputs":[{"name":"index","type":"uint256"},{"name":"voterName","type":"string"}],"name":"addCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"candidateID","type":"uint256"},{"name":"candidateName","type":"string"}],"name":"vote","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"","type":"bool"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"getCandidateCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidates","outputs":[{"name":"name","type":"string"},{"name":"voteCount","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"index","type":"uint256"}],"name":"getCandidate","outputs":[{"name":"","type":"string"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"voters","outputs":[{"name":"voted","type":"bool"},{"name":"candidate","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Vote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"index","type":"uint256"}],"name":"AddCandidate","type":"event"}]
-var address = "0x257ddbb5d0fd75bf11437c0a5ea4d7cc6012a647";
+var address = <ADDRESS>;
 var node = new Web3();
-var nodeIPs = ["http://60.249.15.85:8545","http://60.249.15.85:8546","http://60.249.15.85:8547"];
+var nodeIPs = <NODE_IPS>
 
 router.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
